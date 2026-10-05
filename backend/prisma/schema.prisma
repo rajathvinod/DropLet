@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  folders   Folder[]
+  files     File[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Folder {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  Int?
+  parent    Folder?  @relation("FolderRelation", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[] @relation("FolderRelation")
+  files     File[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isStarred Boolean  @default(false)
+  isDeleted Boolean  @default(false)
+  @@index([userId])
+  @@index([parentId])
+}
+
+model File {
+  id        Int      @id @default(autoincrement())
+  folderId  Int?
+  name      String
+  url       String
+  s3Key     String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  size      Int
+  mimeType  String
+  folder    Folder?   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isStarred Boolean  @default(false)
+  isDeleted Boolean  @default(false)
+  @@index([userId])
+  @@index([folderId])
+}
